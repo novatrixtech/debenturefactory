@@ -15,8 +15,22 @@ contract DebentureX is ERC20, ERC20Burnable, ERC20Pausable, Ownable, ERC20Permit
     string public issuerShareholderMeetingDetails;
     string public collateralDetails;
     uint256 public expirationDate;
+    uint256 public sellPeriod;
+    uint256 public interestRate;
+    uint256 public interestRatePenalty;
+    bool public isDebenturePaid;
     address public custodian;
     address public paymentToken;
+    string constant debentureType = "book-entry";
+    string constant debentureClass = "TBD";
+    string public riskRating;
+    address public riskRatingAgency;
+
+    // Add penalty and interest rate
+    
+    event DebenturePaid();
+    event DebentureClaimed();
+    event DebentureRelevantInfo(string info);
 
     constructor(
       uint256 initialSupply_,
@@ -27,7 +41,12 @@ contract DebentureX is ERC20, ERC20Burnable, ERC20Pausable, Ownable, ERC20Permit
       string memory issuerCountry_,
       string memory issuerShareholderMeetingDetails_,
       string memory collateralDetails_,
+      string memory riskRating_,
+      uint256 memory interestRate_,
+    uint256 memory interestRatePenalty_,
       uint256 expirationDate_,
+      uint256 sellPeriod_,
+        address riskRatingAgency_,
       address custodian_,
       address paymentToken_
     )
@@ -44,6 +63,11 @@ contract DebentureX is ERC20, ERC20Burnable, ERC20Pausable, Ownable, ERC20Permit
         expirationDate = expirationDate_;
         custodian = custodian_; 
         paymentToken = paymentToken_;               
+        sellPeriod = sellPeriod_;
+        riskRating = riskRating_;
+        riskRatingAgency= riskRatingAgency_,
+        interestRate = interestRate_;
+        interestRatePenalty = interestRatePenalty_;
     }
 
     function pause() public onlyOwner {
@@ -65,5 +89,32 @@ contract DebentureX is ERC20, ERC20Burnable, ERC20Pausable, Ownable, ERC20Permit
 
     function decimals() public view virtual override returns (uint8) {
         return 2;
+    }
+
+    function actualValue() public view returns (uint256) {
+        uint256 formulaToBeDefined = 0;
+        return balanceOf(msg.sender) + formulaToBeDefined;
+    }
+
+    // paymentOrClaim function to be defined
+    function paymentOrClaim() public view returns (bool) {
+        if (expirationDate < block.timestamp) {
+            return false;
+        }
+        return true;
+    }
+
+    function changeCustodian(address newCustodian) public onlyOwner {
+        custodian = newCustodian;
+        owner = custodian;
+    }
+
+    function updateRiskRating(string memory newRiskRating) public  {
+        require(riskRatingAgency == msg.sender, "Only the risk rating agency can update the risk rating");
+        riskRating = newRiskRating;
+    }
+
+    function registerRelevantInfo(string memory info) public onlyOwner {
+        emit DebentureRelevantInfo(info);
     }
 }
